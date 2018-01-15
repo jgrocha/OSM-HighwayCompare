@@ -1,0 +1,30 @@
+{
+  "name": "osm-highways-compare",
+  "version": "1.0.0",
+  "description": "A tool to compute highway differences between two layers",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@mapbox/tile-reduce": "^3.2.0",
+    "@mapbox/tilebelt": "^1.0.1",
+    "@turf/bbox": "^5.1.5",
+    "@turf/bbox-clip": "^5.1.5",
+    "@turf/bearing": "^5.1.5",
+    "@turf/boolean-point-on-line": "^5.1.5",
+    "@turf/helpers": "^6.0.0-beta.3",
+    "@turf/invariant": "^6.0.0-beta.3",
+    "@turf/length": "^5.1.5",
+    "@turf/line-offset": "^5.1.5",
+    "@turf/line-segment": "^5.1.5",
+    "@turf/meta": "^6.0.0-beta.3",
+    "@turf/nearest-point-on-line": "^5.1.5",
+    "geojson-rbush": "^2.2.1"
+  }
+}
