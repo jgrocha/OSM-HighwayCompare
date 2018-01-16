@@ -2,31 +2,42 @@
 
 const tileReduce = require('@mapbox/tile-reduce');
 const path = require('path');
-
+const argv = require('minimist')(process.argv.slice(2));
 const iogeojson = require('./lib/io');
 
 function mainCicle(){
 
-    // TODO: Process input arguments
-    let inputGroundtruth = './data/groundtruth.geojson';
-    let inputBBox = './data/bbox.geojson';
-    let inputMbtiles = 'data/portugal.mbtiles';
-    let outputFile = './data/osmdiff.geojson';
+    // Stop on wrong input
+    if(!argv.g || !argv.b || !argv.m){
+        console.log('[Info] Please use -g, -b and -m to define the groundtruth, bounding box and osm layer respectively...');
+
+        return;
+    }
+
+    // Set the ground truth, bounding box and osm tiles
+    let inputGroundtruth = argv.g,
+        inputBBox = argv.b,
+        inputMbtiles = argv.m;
+
+    // Optional output file
+    let outputFile = argv.o ? argv.o : './osmdiff.geojson';
+
+    // Agregate the result of reduce within these
+    let groundtruth = [],
+        osm = [],
+        partialMissing = [],
+        missing = [];
 
     // Read the bbox for this dataset
-    var boundingBox = iogeojson.readGeojson(inputBBox);
+    let boundingBox = iogeojson.readGeojson(inputBBox);
 
-    var groundtruth = [];
-    var osm = [];
-    var partialMissing = [];
-    var missing = [];
-
+    // Set and start tilereduce
     tileReduce({
         zoom: 12,
         map: path.join(__dirname, '/reducer.js'),
         sources: [
             {
-                name: 'portugal',
+                name: 'MBTiles',
                 mbtiles: path.join(__dirname, inputMbtiles),
                 raw: true
             }

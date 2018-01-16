@@ -10,14 +10,20 @@ and returns any missing geometries. Uses Tile-Reduce, a geoprocessing library th
 
 ## Usage
 
-For now just call:
+At the moment, three input files are required:
+* A groundtruth geojson feature collection that will be used to complete the osm layer (it is assumed that
+this only contains highways);
+* A bounding box (geojson geometry) used to reduce the scope of the comparison;
+* And a [MBtiles](https://wiki.openstreetmap.org/wiki/MBTiles) file containing the
+latest osm data to be updated.
 
 ```
-nodejs index.js
+nodejs index.js -g groundtruth.geojson -b boundingbox.geojson -m osm.mbtiles -o output.geojson
 ```
 
-The output "osmdiff.geojson" will contain four sets of feature collections: the groundtruth and osm layer corresponding
- to the input bounding box and the computed missing and partially missing geometries.
+The output will contain four sets of feature collections: the groundtruth and osm layer corresponding
+ to the input bounding box and the computed geometries that are missing or partially missing on the osm layer.
+ If no output file is specified, the result will be stored into "osmdiff.geojson".
 
 ## Dataset
 

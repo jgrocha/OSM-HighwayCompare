@@ -25,6 +25,7 @@
     "@turf/line-segment": "^5.1.5",
     "@turf/meta": "^6.0.0-beta.3",
     "@turf/nearest-point-on-line": "^5.1.5",
-    "geojson-rbush": "^2.2.1"
+    "geojson-rbush": "^2.2.1",
+    "minimist": "^1.2.0"
   }
 }
