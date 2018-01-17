@@ -37,7 +37,7 @@ function mainCicle(){
         map: path.join(__dirname, '/reducer.js'),
         sources: [
             {
-                name: 'MBTiles',
+                name: 'osmtiles',
                 mbtiles: path.join(__dirname, inputMbtiles),
                 raw: true
             }

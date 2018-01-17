@@ -60,9 +60,9 @@ const reducer = function (data, tile, writeData, done) {
 
     // If we save the complete geojson
     // Cycle 1 time through osm
-    for (let i = 0; i < data.portugal.osm.length; i++) {
+    for (let i = 0; i < data.osmtiles.osm.length; i++) {
 
-        let osmfeature = data.portugal.osm.feature(i);
+        let osmfeature = data.osmtiles.osm.feature(i);
         let osmgeom = osmfeature.toGeoJSON(tile[0], tile[1], tile[2]);
 
         if(!osmfeature.properties.highway || highwayList.indexOf(osmfeature.properties.highway) === -1){
@@ -78,6 +78,7 @@ const reducer = function (data, tile, writeData, done) {
 
         let clippedGeometry = clippedFeature.geometry;
 
+        // If the geometry isn't within the bbox
         if(clippedGeometry.coordinates.length === 0){
             // Skip to next
             return;
@@ -89,24 +90,17 @@ const reducer = function (data, tile, writeData, done) {
         // If we save the complete geojson
         result.groundtruth.push(gtfeature);
 
-        let foundMatch = false;
         let overallCoverage = 0.0; // Should be ~1
 
-        // Cycle through every osm feature and find first occurrence of a bbox intersect feature
-        for (let i = 0; i < data.portugal.osm.length; i++) {
+        // Cycle through every filtered osm feature
+        for (let i = 0; i < result.osm.length; i++) {
 
-            let osmfeature = data.portugal.osm.feature(i);
-            let osmgeom = osmfeature.toGeoJSON(tile[0], tile[1], tile[2]);
-
-            if(!osmfeature.properties.highway ||
-                highwayList.indexOf(osmfeature.properties.highway) === -1){
-                continue;
-            }
+            let osmgeom = result.osm[i];
 
             // How much B fits in A for A,B
-            let overlapInfo = compareLines(osmgeom, gtfeature, overlapTolerance);
+            let comparison = compareLines(osmgeom, gtfeature, overlapTolerance);
 
-            let overlaps = overlapInfo.overlaps;
+            let overlaps = comparison.overlaps;
 
             // If overlaps
             if(overlaps.features.length > 0){
@@ -117,8 +111,6 @@ const reducer = function (data, tile, writeData, done) {
                 // Update the overall coverage percentage
                 overallCoverage = overallCoverage + ((lenOverlap / lenFeature) * (1.0 - overallCoverage));
 
-                foundMatch = true;
-
                 if(overallCoverage <= 1.0 + err && overallCoverage > 1.0 - err){
                     // Completelly overlaps
                     // do nothing...
@@ -126,7 +118,7 @@ const reducer = function (data, tile, writeData, done) {
                     break;
                 } else {
                     // Partially overlaps, continue...reset geometry to what's missing
-                    gtfeature = overlapInfo.missing;
+                    gtfeature = comparison.missing;
                 }
             }
         }
@@ -134,14 +126,12 @@ const reducer = function (data, tile, writeData, done) {
         // console.log("> Coverage was " + overallCoverage);
 
         // Something went wrong if it hits any of these conditions
-        if(overallCoverage === 0.0 && foundMatch){
-            console.log("[Err] Invalid 0.0%")
-        } else if(overallCoverage > 1.0 + err){
+        if(overallCoverage > 1.0 + err){
             console.log("[Err] Invalid % > 1.0  ---> " + overallCoverage);
         }
 
         // Process the result
-        if(!foundMatch){
+        if(overallCoverage === 0.0){
             // Didnt find a match
 
             gtfeature.properties.coverage = overallCoverage;
