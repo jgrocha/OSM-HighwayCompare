@@ -1,65 +1,40 @@
 'use strict';
 
-const tileReduce = require('@mapbox/tile-reduce');
-const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
-const iogeojson = require('./lib/io');
+const mapper = require("./mapper");
 
-function mainCicle(){
+/**
+ * Main
+ *
+ * ex: nodejs index.js -g groundtruthFile -m mbtilesFile -b boundingboxFile -t #threads -o outputFile (optional)
+ */
+function highwayCompare(){
 
     // Stop on wrong input
     if(!argv.g || !argv.b || !argv.m){
-        console.log('[Info] Please use -g, -b and -m to define the groundtruth, bounding box and osm layer respectively...');
+
+        console.log('[HighwayCompare]');
+        console.log('Params: ');
+        console.log('   -g groundtruthFile');
+        console.log('   -b boundingboxFile');
+        console.log('   -m mbtilesFile');
+        console.log('   -t #threads (OPTIONAL)');
+        console.log('   -o output (OPTIONAL)');
 
         return;
     }
 
     // Set the ground truth, bounding box and osm tiles
-    let inputGroundtruth = argv.g,
-        inputBBox = argv.b,
-        inputMbtiles = argv.m;
+    let params = {
+        gtruth: argv.g,
+        bbox: argv.b,
+        mbtiles: argv.m,
+        threads: (argv.t && Number.isInteger(argv.t) && argv.t > 0 && argv.t % 2 === 0) ? argv.t : 4,
+        output: argv.o ? argv.o : './osmdiff.geojson' // Optional output file
+    };
 
-    // Optional output file
-    let outputFile = argv.o ? argv.o : './osmdiff.geojson';
-
-    // Agregate the result of reduce within these
-    let groundtruth = [],
-        osm = [],
-        partialMissing = [],
-        missing = [];
-
-    // Read the bbox for this dataset
-    let boundingBox = iogeojson.readGeojson(inputBBox);
-
-    // Set and start tilereduce
-    tileReduce({
-        zoom: 12,
-        map: path.join(__dirname, '/reducer.js'),
-        sources: [
-            {
-                name: 'osmtiles',
-                mbtiles: path.join(__dirname, inputMbtiles),
-                raw: true
-            }
-        ],
-        maxWorkers: 4,
-        geojson: boundingBox,
-        mapOptions: {
-            groundtruthFile: inputGroundtruth
-        }
-    })
-    .on('map', function (tile, workerId) {
-        console.log('about to process ' + JSON.stringify(tile) +' on worker '+workerId);
-    })
-    .on('reduce', function (result, tile) {
-        groundtruth = groundtruth.concat(result.groundtruth);
-        osm = osm.concat(result.osm);
-        partialMissing = partialMissing.concat(result.partialMissing);
-        missing = missing.concat(result.missing);
-    })
-    .on('end', function () {
-        iogeojson.writeResult(outputFile, groundtruth, osm, partialMissing, missing);
-    });
+    // Call map
+    mapper(params);
 }
 
-mainCicle();
+highwayCompare();
